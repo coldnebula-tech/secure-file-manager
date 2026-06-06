@@ -1,0 +1,13 @@
+body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; color: #111; }
+.login-container { width: 320px; margin: 100px auto; padding: 24px; background: white; box-shadow: 0 0 16px rgba(0,0,0,.08); border-radius: 10px; }
+.login-container h1 { margin-top: 0; }
+.login-container label { display: block; margin-top: 16px; font-weight: 600; }
+.login-container input { width: 100%; padding: 8px; margin: 8px 0 0; border: 1px solid #ccc; border-radius: 6px; background: #fff; color: #111; }
+.login-container button { width: 100%; padding: 10px; margin-top: 16px; background: #2979ff; color: white; border: none; border-radius: 6px; cursor: pointer; }
+
+@media (prefers-color-scheme: dark) {
+  body { background: #121318; color: #f1f2f6; }
+  .login-container { background: #1c1f2a; box-shadow: 0 0 24px rgba(0,0,0,.45); }
+  .login-container input { background: #232635; border-color: #44485b; color: #f1f2f6; }
+  .login-container button { background: #4c7dff; }
+}

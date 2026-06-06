@@ -1,0 +1,76 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #080a14;
+  color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.lock-screen {
+  width: min(380px, calc(100vw - 32px));
+  text-align: center;
+  padding: 32px 28px;
+  background: #111827;
+  border: 1px solid #2d3748;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+}
+
+.lock-screen h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  letter-spacing: 0.04em;
+}
+
+.lock-message {
+  margin: 16px 0 24px;
+  color: #94a3b8;
+  font-size: 0.99rem;
+}
+
+.lock-screen label {
+  display: block;
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+.lock-screen input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  margin-bottom: 18px;
+}
+
+.lock-screen button {
+  width: 100%;
+  padding: 12px 14px;
+  background: #2563eb;
+  border: 1px solid #1d4ed8;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lock-screen button:hover {
+  background: #1d4ed8;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #04060f;
+  }
+
+  .lock-screen {
+    background: #0d111e;
+    border-color: #1e293b;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  }
+}

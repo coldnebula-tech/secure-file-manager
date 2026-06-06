@@ -1,0 +1,5 @@
+{
+  "uploadLimitMb": 50,
+  "allowedFileTypes": ["jpg", "png", "txt", "pdf"],
+  "maxFolderDepth": 5
+}

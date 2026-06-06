@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Manager</title>
+  <link rel="stylesheet" href="../../css/manager.css" />
+</head>
+<body>
+  <header>
+    <h1>FILE MANAGER PORTAL</h1>
+    <div class="user-status">User: admin</div>
+  </header>
+  <main>
+    <nav class="action-bar">
+      <button type="button" id="upload-btn">Upload</button>
+      <button type="button" id="new-folder-btn">New Folder</button>
+      <button type="button" id="refresh-btn">Refresh</button>
+      <button type="button" id="lock-btn">Lock</button>
+      <button type="button" id="logout-btn">Logout</button>
+    </nav>
+
+    <section class="breadcrumb">
+      <span class="breadcrumb-current">Home</span>
+    </section>
+
+    <section class="search-section">
+      <label for="search-input">Search:</label>
+      <input id="search-input" type="text" placeholder="Search files and folders" />
+    </section>
+
+    <section class="file-table">
+      <div class="file-table-header">
+        <button type="button" class="sort-button active" data-sort-key="name" data-label="Name">Name</button>
+        <button type="button" class="sort-button" data-sort-key="size" data-label="Size">Size</button>
+        <button type="button" class="sort-button" data-sort-key="modified" data-label="Modified">Modified</button>
+        <span class="table-actions-header"></span>
+      </div>
+      <div id="file-list" class="file-list"></div>
+    </section>
+
+    <div class="status-bar">
+      <span id="item-count">0</span> items visible
+    </div>
+  </main>
+
+  <div class="dialog-overlay hidden" id="new-folder-dialog">
+    <div class="dialog-box">
+      <h2>New Folder</h2>
+      <p>Enter a name for the new folder.</p>
+      <input id="new-folder-name" type="text" placeholder="Folder name" />
+      <div class="dialog-actions">
+        <button type="button" id="create-folder-confirm">Create</button>
+        <button type="button" id="create-folder-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-overlay hidden" id="rename-dialog">
+    <div class="dialog-box">
+      <h2>Rename Item</h2>
+      <p>Enter a new name for the selected item.</p>
+      <input id="rename-input" type="text" />
+      <div class="dialog-actions">
+        <button type="button" id="rename-confirm">Save</button>
+        <button type="button" id="rename-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-overlay hidden" id="delete-dialog">
+    <div class="dialog-box">
+      <h2>Delete Item</h2>
+      <p id="delete-message">Are you sure you want to delete this item?</p>
+      <div class="dialog-actions">
+        <button type="button" id="delete-confirm">Delete</button>
+        <button type="button" id="delete-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="upload-input" hidden multiple />
+
+  <script src="../../js/navigation.js"></script>
+  <script src="../../js/search.js"></script>
+</body>
+</html>
