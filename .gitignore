@@ -3,6 +3,10 @@ node_modules/
 
 server/storage/files/
 server/storage/tmp/
+server/storage/files/
+server/storage/tmp/
+server/storage/*.sqlite
+server/storage/*.db
 
 data/logs/
 data/backups/

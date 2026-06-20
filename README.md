@@ -424,8 +424,28 @@ Create or edit `.env` to customize behavior:
 | `APP_LOCKED` | `false` | Set `true` to enable app lock |
 | `MAX_FILE_SIZE_BYTES` | `10485760` | Max upload size (10 MB) |
 | `BCRYPT_ROUNDS` | `10` | Password hashing cost |
+| `SQLITE_DB_PATH` | `server/storage/database.sqlite` | SQLite database file location |
 | `CORS_ORIGIN` | (empty) | Restrict CORS origin |
 | `LOG_LEVEL` | `info` | Logging level |
+
+---
+
+## 🗄️ Database Setup (SQLite & Sequelize)
+
+The application user storage has been migrated from a static JSON file (`server/config/users.json`) to a local SQLite database using Sequelize ORM.
+
+- **Automatic Seeding**: On the initial startup, the database detects if the `Users` table is empty and seeds it using records from `server/config/users.json`. Original IDs are preserved (such as admin having `id: 1`).
+- **Configuration**: The SQLite database file path can be customized via the `SQLITE_DB_PATH` environment variable.
+
+---
+
+## 📤 Drag-and-Drop File Upload
+
+We've improved the frontend user experience with a visual drag-and-drop file upload target area on the file manager dashboard:
+
+- **Glassmorphism Design**: Blur backdrop filter with smooth modal transition scales.
+- **Pulsing Border Animation**: Border highlight feedback to capture attention during active drag hover states.
+- **Flicker-free tracking**: Uses an active drag-counter mechanism to avoid rendering flickers as the cursor moves over child elements.
 
 ---
 
@@ -441,7 +461,7 @@ Create or edit `.env` to customize behavior:
 - HTTPS redirect (production mode)
 
 ⚠️ **For Production:**
-- [ ] Replace `server/config/users.json` with a real database
+- [x] Replace `server/config/users.json` with a real database (SQLite + Sequelize ORM integrated)
 - [ ] Use a secure secrets manager for `JWT_SECRET`
 - [ ] Terminate TLS at a reverse proxy (Nginx, AWS ALB, etc.)
 - [ ] Add structured logging & centralized monitoring

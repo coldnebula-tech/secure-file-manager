@@ -27,6 +27,7 @@ function initManagerPage() {
   attachSearch();
   attachSortButtons();
   attachUploadInput();
+  attachDragAndDrop();
   renderFileList();
 }
 
@@ -111,36 +112,76 @@ function attachSortButtons() {
  *
  * @returns {void}
  */
+async function uploadFiles(files) {
+  if (files.length === 0) return;
+
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+  formData.append('path', currentPath);
+
+  try {
+    const response = await fetch('/api/files/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+    if (!result.success) {
+      window.alert(result.message || 'Upload failed.');
+    } else {
+      showTemporaryMessage(`${files.length} file(s) uploaded successfully.`);
+      renderFileList();
+    }
+  } catch (error) {
+    window.alert('Upload failed. Please try again.');
+  }
+}
+
 function attachUploadInput() {
   const uploadInput = document.getElementById('upload-input');
   uploadInput?.addEventListener('change', async (event) => {
     const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
-
-    const formData = new FormData();
-    files.forEach((file) => formData.append('files', file));
-    formData.append('path', currentPath);
-
-    try {
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const result = await response.json();
-
-      if (!result.success) {
-        window.alert(result.message || 'Upload failed.');
-      } else {
-        showTemporaryMessage(`${files.length} file(s) selected.`);
-        renderFileList();
-      }
-    } catch (error) {
-      window.alert('Upload failed. Please try again.');
-    }
-
+    await uploadFiles(files);
     if (uploadInput) {
       uploadInput.value = '';
     }
+  });
+}
+
+let dragCounter = 0;
+
+function attachDragAndDrop() {
+  const overlay = document.getElementById('drag-drop-overlay');
+
+  window.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    if (dragCounter === 1 && overlay) {
+      overlay.classList.remove('hidden');
+    }
+  });
+
+  window.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  window.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0 && overlay) {
+      overlay.classList.add('hidden');
+    }
+  });
+
+  window.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    if (overlay) {
+      overlay.classList.add('hidden');
+    }
+
+    const files = Array.from(e.dataTransfer.files || []);
+    await uploadFiles(files);
   });
 }
 

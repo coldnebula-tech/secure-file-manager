@@ -1,33 +1,13 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
 const auth = require('../middleware/auth');
+const { User } = require('../config/db');
 const router = express.Router();
 
 // Admin users management routes
 // In this demo, user with id=1 (admin) has admin rights
-const usersPath = path.resolve(__dirname, '../config/users.json');
 const SALT_ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 10;
-
-/**
- * Load users from the JSON file
- *
- * @returns {Array<Object>} Array of user objects
- */
-function loadUsers() {
-  return require('../config/users.json');
-}
-
-/**
- * Save users back to the JSON file
- *
- * @param {Array<Object>} users - Array of user objects to save
- */
-function saveUsers(users) {
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-}
 
 /**
  * Check if the authenticated user is an admin (id === 1)
@@ -43,15 +23,19 @@ function isAdmin(user) {
  * GET /api/admin/users
  * List all users (admin only). Returns usernames and IDs (no passwords).
  */
-router.get('/users', auth, (req, res) => {
+router.get('/users', auth, async (req, res) => {
   if (!isAdmin(req.user)) {
     return res.status(403).json({ success: false, message: 'Admin access required.' });
   }
 
-  const users = loadUsers();
-  const sanitized = users.map((u) => ({ id: u.id, username: u.username }));
-
-  res.json({ success: true, users: sanitized });
+  try {
+    const users = await User.findAll();
+    const sanitized = users.map((u) => ({ id: u.id, username: u.username }));
+    res.json({ success: true, users: sanitized });
+  } catch (err) {
+    console.error('Error listing users', err);
+    res.status(500).json({ success: false, message: 'Error listing users.' });
+  }
 });
 
 /**
@@ -71,30 +55,25 @@ router.post('/users/add', auth, async (req, res) => {
   const { error, value } = schema.validate(req.body);
   if (error) return res.status(400).json({ success: false, message: error.message });
 
-  const users = loadUsers();
   const { username, password } = value;
 
-  // Check if username already exists
-  if (users.find((u) => u.username === username)) {
-    return res.status(400).json({ success: false, message: 'Username already exists.' });
-  }
-
   try {
+    // Check if username already exists
+    const existing = await User.findOne({ where: { username } });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Username already exists.' });
+    }
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // Find next available ID
-    const nextId = Math.max(...users.map((u) => u.id), 0) + 1;
-
     // Add new user
-    const newUser = { id: nextId, username, password: hashedPassword };
-    users.push(newUser);
-    saveUsers(users);
+    const newUser = await User.create({ username, password: hashedPassword });
 
     res.json({
       success: true,
       message: `User '${username}' created successfully.`,
-      user: { id: nextId, username }
+      user: { id: newUser.id, username }
     });
   } catch (err) {
     console.error('Error creating user', err);
@@ -123,17 +102,15 @@ router.post('/users/change-password', auth, async (req, res) => {
     return res.status(403).json({ success: false, message: 'You can only change your own password.' });
   }
 
-  const users = loadUsers();
-  const user = users.find((u) => u.id === userId);
-
-  if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found.' });
-  }
-
   try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
     user.password = hashedPassword;
-    saveUsers(users);
+    await user.save();
 
     res.json({ success: true, message: `Password changed successfully for user '${user.username}'.` });
   } catch (err) {
@@ -147,7 +124,7 @@ router.post('/users/change-password', auth, async (req, res) => {
  * Change a user's username (admin only).
  * Body: { userId, newUsername }
  */
-router.post('/users/change-username', auth, (req, res) => {
+router.post('/users/change-username', auth, async (req, res) => {
   if (!isAdmin(req.user)) {
     return res.status(403).json({ success: false, message: 'Admin access required.' });
   }
@@ -162,22 +139,21 @@ router.post('/users/change-username', auth, (req, res) => {
 
   const { userId, newUsername } = value;
 
-  const users = loadUsers();
-  const user = users.find((u) => u.id === userId);
-
-  if (!user) {
-    return res.status(404).json({ success: false, message: 'User not found.' });
-  }
-
-  // Check if new username is already taken
-  if (users.find((u) => u.username === newUsername && u.id !== userId)) {
-    return res.status(400).json({ success: false, message: 'Username already taken.' });
-  }
-
   try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Check if new username is already taken
+    const existing = await User.findOne({ where: { username: newUsername } });
+    if (existing && existing.id !== userId) {
+      return res.status(400).json({ success: false, message: 'Username already taken.' });
+    }
+
     const oldUsername = user.username;
     user.username = newUsername;
-    saveUsers(users);
+    await user.save();
 
     res.json({
       success: true,
@@ -194,7 +170,7 @@ router.post('/users/change-username', auth, (req, res) => {
  * DELETE /api/admin/users/:userId
  * Delete a user (admin only). Cannot delete the admin user (id=1).
  */
-router.delete('/users/:userId', auth, (req, res) => {
+router.delete('/users/:userId', auth, async (req, res) => {
   if (!isAdmin(req.user)) {
     return res.status(403).json({ success: false, message: 'Admin access required.' });
   }
@@ -205,17 +181,14 @@ router.delete('/users/:userId', auth, (req, res) => {
     return res.status(400).json({ success: false, message: 'Cannot delete the admin user.' });
   }
 
-  const users = loadUsers();
-  const userIndex = users.findIndex((u) => u.id === userId);
-
-  if (userIndex === -1) {
-    return res.status(404).json({ success: false, message: 'User not found.' });
-  }
-
   try {
-    const deletedUsername = users[userIndex].username;
-    users.splice(userIndex, 1);
-    saveUsers(users);
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const deletedUsername = user.username;
+    await user.destroy();
 
     res.json({ success: true, message: `User '${deletedUsername}' deleted successfully.` });
   } catch (err) {

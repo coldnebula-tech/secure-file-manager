@@ -1,11 +1,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
-const usersPath = path.resolve(__dirname, '../config/users.json');
-let users = require('../config/users.json');
+const { User } = require('../config/db');
 const router = express.Router();
 
 // auth.js
@@ -34,12 +31,12 @@ router.post('/login', async (req, res) => {
   const username = value.username.trim();
   const password = value.password.trim();
 
-  const user = users.find((u) => u.username === username);
-  if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials.' });
-
-  const stored = user.password || '';
-
   try {
+    const user = await User.findOne({ where: { username } });
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+
+    const stored = user.password || '';
+
     if (stored.startsWith('$2')) {
       // bcrypt hash
       const ok = await bcrypt.compare(password, stored);
@@ -51,7 +48,7 @@ router.post('/login', async (req, res) => {
       user.password = newHash;
       // Persist migration
       try {
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+        await user.save();
       } catch (writeErr) {
         console.error('Failed to migrate user password to hash:', writeErr);
       }
